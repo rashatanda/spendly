@@ -20,7 +20,7 @@
         </p>
         <div class="hero-actions hero-actions--centered">
             <a href="{{ url_for('register') }}" class="btn-dark">Create free account</a>
-            <a href="#features" class="btn-dark">See how it works</a>
+            <button id="open-demo-modal" class="btn-dark">See how it works</button>
         </div>
     </div>
 
@@ -100,4 +100,99 @@
     </div>
 </section>
 
+<!-- Video demo modal -->
+<div id="demo-modal" class="demo-modal-overlay" role="dialog" aria-modal="true" aria-label="Demo video" hidden>
+    <div class="demo-modal-box">
+        <button id="close-demo-modal" class="demo-modal-close" aria-label="Close">&times;</button>
+        <div class="demo-modal-video-wrap">
+            <iframe id="demo-iframe"
+                src=""
+                data-src="https://www.youtube.com/embed/dQw4w9WgXcQ?enablejsapi=1"
+                title="Spendly demo"
+                frameborder="0"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowfullscreen>
+            </iframe>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<style>
+.demo-modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,.7);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+.demo-modal-overlay[hidden] { display: none; }
+.demo-modal-box {
+    position: relative;
+    width: min(860px, 92vw);
+    background: #000;
+    border-radius: 12px;
+    overflow: hidden;
+}
+.demo-modal-close {
+    position: absolute;
+    top: 10px;
+    right: 14px;
+    background: none;
+    border: none;
+    color: #fff;
+    font-size: 2rem;
+    line-height: 1;
+    cursor: pointer;
+    z-index: 1;
+}
+.demo-modal-video-wrap {
+    position: relative;
+    padding-top: 56.25%;
+}
+.demo-modal-video-wrap iframe {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+}
+</style>
+
+<script>
+(function () {
+    var overlay = document.getElementById('demo-modal');
+    var iframe  = document.getElementById('demo-iframe');
+    var openBtn = document.getElementById('open-demo-modal');
+    var closeBtn = document.getElementById('close-demo-modal');
+
+    function openModal() {
+        iframe.src = iframe.dataset.src;
+        overlay.hidden = false;
+        document.body.style.overflow = 'hidden';
+        closeBtn.focus();
+    }
+
+    function closeModal() {
+        overlay.hidden = true;
+        iframe.src = '';
+        document.body.style.overflow = '';
+        openBtn.focus();
+    }
+
+    openBtn.addEventListener('click', openModal);
+    closeBtn.addEventListener('click', closeModal);
+
+    overlay.addEventListener('click', function (e) {
+        if (e.target === overlay) closeModal();
+    });
+
+    document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape' && !overlay.hidden) closeModal();
+    });
+}());
+</script>
 {% endblock %}
