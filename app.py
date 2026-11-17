@@ -1,6 +1,10 @@
-from flask import Flask, render_template
+from flask import Flask, render_template, request, redirect, url_for, session, flash
+from werkzeug.security import generate_password_hash
+import os
+from database.db import get_db
 
 app = Flask(__name__)
+app.secret_key = os.environ.get("SECRET_KEY", "dev-secret-change-in-prod")
 
 
 # ------------------------------------------------------------------ #
@@ -22,8 +26,45 @@ def privacy():
     return render_template("privacy.html")
 
 
-@app.route("/register")
+@app.route("/register", methods=["GET", "POST"])
 def register():
+    if request.method == "POST":
+        username = request.form.get("username", "").strip()
+        email = request.form.get("email", "").strip()
+        password = request.form.get("password", "")
+        confirm_password = request.form.get("confirm_password", "")
+
+        if not all([username, email, password, confirm_password]):
+            flash("All fields are required.")
+            return render_template("register.html")
+
+        if password != confirm_password:
+            flash("Passwords do not match.")
+            return render_template("register.html")
+
+        conn = get_db()
+        try:
+            if conn.execute("SELECT id FROM users WHERE username = ?", (username,)).fetchone():
+                flash("Username already taken.")
+                return render_template("register.html")
+
+            if conn.execute("SELECT id FROM users WHERE email = ?", (email,)).fetchone():
+                flash("Email already registered.")
+                return render_template("register.html")
+
+            hashed = generate_password_hash(password)
+            cur = conn.execute(
+                "INSERT INTO users (username, email, password) VALUES (?, ?, ?)",
+                (username, email, hashed),
+            )
+            conn.commit()
+            session["user_id"] = cur.lastrowid
+            session["username"] = username
+        finally:
+            conn.close()
+
+        return redirect(url_for("landing"))
+
     return render_template("register.html")
 
 
