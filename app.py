@@ -3,8 +3,14 @@ from werkzeug.security import generate_password_hash
 import os
 from database.db import get_db
 
+from database.db import init_db, seed_db
+
 app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY", "dev-secret-change-in-prod")
+
+with app.app_context():
+    init_db()
+    seed_db()
 
 
 # ------------------------------------------------------------------ #
