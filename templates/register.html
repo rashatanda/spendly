@@ -24,12 +24,14 @@
                     <label for="username">Username</label>
                     <input type="text" id="username" name="username"
                            class="form-input" placeholder="nitishkumar"
+                           value="{{ request.form.get('username', '') }}"
                            required autofocus>
                 </div>
                 <div class="form-group">
                     <label for="email">Email address</label>
                     <input type="email" id="email" name="email"
                            class="form-input" placeholder="nitish@example.com"
+                           value="{{ request.form.get('email', '') }}"
                            required>
                 </div>
                 <div class="form-group">
