@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+
+{% block title %}Profile — Spendly{% endblock %}
+
+{% block content %}
+
+<section class="auth-section">
+    <div class="auth-container">
+
+        <div class="auth-header">
+            <h1 class="auth-title">Your profile</h1>
+            <p class="auth-subtitle">{{ user.name }}</p>
+        </div>
+
+        <div class="auth-card">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% set category, message = messages[0] %}
+                <div class="{{ 'auth-success' if category == 'success' else 'auth-error' }}">{{ message }}</div>
+            {% endif %}
+            {% endwith %}
+
+            <dl class="profile-info">
+                <dt>Username</dt>
+                <dd>{{ user.name }}</dd>
+                <dt>Email</dt>
+                <dd>{{ user.email }}</dd>
+                <dt>Member since</dt>
+                <dd>{{ user.created_at }}</dd>
+            </dl>
+
+            <hr class="profile-divider">
+
+            <h2 class="profile-section-title">Change password</h2>
+
+            <form method="POST" action="/profile">
+                <div class="form-group">
+                    <label for="current_password">Current password</label>
+                    <input type="password" id="current_password" name="current_password"
+                           class="form-input" required>
+                </div>
+                <div class="form-group">
+                    <label for="new_password">New password</label>
+                    <input type="password" id="new_password" name="new_password"
+                           class="form-input" required>
+                </div>
+                <div class="form-group">
+                    <label for="confirm_new_password">Confirm new password</label>
+                    <input type="password" id="confirm_new_password" name="confirm_new_password"
+                           class="form-input" required>
+                </div>
+                <button type="submit" class="btn-submit">Update password</button>
+            </form>
+        </div>
+
+    </div>
+</section>
+
+{% endblock %}
