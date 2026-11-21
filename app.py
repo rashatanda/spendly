@@ -69,10 +69,11 @@ def register():
             conn.commit()
             session["user_id"] = cur.lastrowid
             session["username"] = username
+            session.pop("_flashes", None)
         finally:
             conn.close()
 
-        return redirect(url_for("landing"))
+        return redirect(url_for("profile"))
 
     return render_template("register.html")
 
@@ -104,6 +105,8 @@ def login():
 
         session["user_id"] = row["id"]
         session["username"] = row["name"]
+        session.pop("_flashes", None)
+        flash(f"Welcome back, {row['name']}!", "success")
         return redirect(url_for("landing"))
 
     return render_template("login.html")
@@ -116,12 +119,61 @@ def login():
 @app.route("/logout")
 def logout():
     session.clear()
+    flash("You have been logged out.", "success")
     return redirect(url_for("landing"))
 
 
-@app.route("/profile")
+@app.route("/profile", methods=["GET", "POST"])
 def profile():
-    return "Profile page — coming in Step 4"
+    if not session.get("user_id"):
+        flash("Please sign in to view your profile.")
+        return redirect(url_for("login"))
+
+    if request.method == "POST":
+        current_password = request.form.get("current_password", "")
+        new_password = request.form.get("new_password", "")
+        confirm_new = request.form.get("confirm_new_password", "")
+
+        if not all([current_password, new_password, confirm_new]):
+            flash("All fields are required.")
+            return redirect(url_for("profile"))
+
+        conn = get_db()
+        try:
+            row = conn.execute(
+                "SELECT password_hash FROM users WHERE id = ?",
+                (session["user_id"],)
+            ).fetchone()
+
+            if not check_password_hash(row["password_hash"], current_password):
+                flash("Current password is incorrect.")
+                return redirect(url_for("profile"))
+
+            if new_password != confirm_new:
+                flash("New passwords do not match.")
+                return redirect(url_for("profile"))
+
+            conn.execute(
+                "UPDATE users SET password_hash = ? WHERE id = ?",
+                (generate_password_hash(new_password), session["user_id"])
+            )
+            conn.commit()
+        finally:
+            conn.close()
+
+        flash("Password updated successfully.", "success")
+        return redirect(url_for("profile"))
+
+    conn = get_db()
+    try:
+        user = conn.execute(
+            "SELECT name, email, created_at FROM users WHERE id = ?",
+            (session["user_id"],)
+        ).fetchone()
+    finally:
+        conn.close()
+
+    return render_template("profile.html", user=user)
 
 
 @app.route("/expenses/add")
