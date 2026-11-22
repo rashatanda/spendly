@@ -1,9 +1,8 @@
 from flask import Flask, render_template, request, redirect, url_for, session, flash
-from werkzeug.security import generate_password_hash, check_password_hash, check_password_hash
+from werkzeug.security import generate_password_hash, check_password_hash
 import os
-from database.db import get_db
-
-from database.db import init_db, seed_db
+from database.db import get_db, init_db, seed_db
+from database.queries import get_user_by_id, get_summary_stats, get_recent_transactions, get_category_breakdown
 
 app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY", "dev-secret-change-in-prod")
@@ -164,16 +163,14 @@ def profile():
         flash("Password updated successfully.", "success")
         return redirect(url_for("profile"))
 
-    conn = get_db()
-    try:
-        user = conn.execute(
-            "SELECT name, email, created_at FROM users WHERE id = ?",
-            (session["user_id"],)
-        ).fetchone()
-    finally:
-        conn.close()
+    uid = session["user_id"]
+    user = get_user_by_id(uid)
+    stats = get_summary_stats(uid)
+    transactions = get_recent_transactions(uid)
+    breakdown = get_category_breakdown(uid)
 
-    return render_template("profile.html", user=user)
+    return render_template("profile.html", user=user, stats=stats,
+                           transactions=transactions, breakdown=breakdown)
 
 
 @app.route("/expenses/add")

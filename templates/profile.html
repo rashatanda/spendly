@@ -4,35 +4,103 @@
 
 {% block content %}
 
-<section class="auth-section">
-    <div class="auth-container">
+<div class="profile-page">
 
-        <div class="auth-header">
-            <h1 class="auth-title">Your profile</h1>
-            <p class="auth-subtitle">{{ user.name }}</p>
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+        {% set category, message = messages[0] %}
+        <div class="{{ 'auth-success' if category == 'success' else 'auth-error' }} profile-flash">{{ message }}</div>
+    {% endif %}
+    {% endwith %}
+
+    <!-- Spending summary stats -->
+    <div class="dashboard-stats profile-stats">
+        <div class="stat-tile">
+            <span class="stat-label">Total spent</span>
+            <span class="stat-value">₹{{ "%.2f"|format(stats.total_spent) }}</span>
+        </div>
+        <div class="stat-tile">
+            <span class="stat-label">Transactions</span>
+            <span class="stat-value stat-value--plain">{{ stats.transaction_count }}</span>
+        </div>
+        <div class="stat-tile">
+            <span class="stat-tile--wide stat-label">Top category</span>
+            <span class="stat-value">{{ stats.top_category or "—" }}</span>
+        </div>
+    </div>
+
+    <!-- Two-column dashboard -->
+    <div class="profile-dashboard">
+
+        <!-- Recent transactions -->
+        <div class="profile-panel">
+            <h2 class="panel-title">Recent Transactions</h2>
+            {% if transactions %}
+            <table class="transactions-table">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Description</th>
+                        <th>Category</th>
+                        <th class="amount-col">Amount</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for t in transactions %}
+                    <tr>
+                        <td class="date-col">{{ t.date }}</td>
+                        <td>{{ t.description or "—" }}</td>
+                        <td><span class="category-badge">{{ t.category }}</span></td>
+                        <td class="amount-col">₹{{ "%.2f"|format(t.amount) }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <p class="empty-state">No transactions yet.</p>
+            {% endif %}
         </div>
 
-        <div class="auth-card">
-            {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}
-                {% set category, message = messages[0] %}
-                <div class="{{ 'auth-success' if category == 'success' else 'auth-error' }}">{{ message }}</div>
+        <!-- Category breakdown -->
+        <div class="profile-panel">
+            <h2 class="panel-title">By Category</h2>
+            {% if breakdown %}
+            <ul class="category-list">
+                {% for item in breakdown %}
+                <li class="category-item">
+                    <div class="category-meta">
+                        <span class="category-name">{{ item.name }}</span>
+                        <span class="category-amount">₹{{ "%.2f"|format(item.amount) }}</span>
+                    </div>
+                    <div class="category-bar-track">
+                        <div class="category-bar-fill" style="width: {{ item.pct }}%"></div>
+                    </div>
+                </li>
+                {% endfor %}
+            </ul>
+            {% else %}
+            <p class="empty-state">No spending data yet.</p>
             {% endif %}
-            {% endwith %}
+        </div>
 
+    </div>
+
+    <!-- Account info + change password -->
+    <div class="profile-panel profile-account">
+        <div class="profile-account-info">
+            <h2 class="panel-title">Account</h2>
             <dl class="profile-info">
                 <dt>Username</dt>
                 <dd>{{ user.name }}</dd>
                 <dt>Email</dt>
                 <dd>{{ user.email }}</dd>
                 <dt>Member since</dt>
-                <dd>{{ user.created_at }}</dd>
+                <dd>{{ user.member_since }}</dd>
             </dl>
+        </div>
 
-            <hr class="profile-divider">
-
-            <h2 class="profile-section-title">Change password</h2>
-
+        <div class="profile-account-pw">
+            <h2 class="panel-title">Change password</h2>
             <form method="POST" action="/profile">
                 <div class="form-group">
                     <label for="current_password">Current password</label>
@@ -52,8 +120,8 @@
                 <button type="submit" class="btn-submit">Update password</button>
             </form>
         </div>
-
     </div>
-</section>
+
+</div>
 
 {% endblock %}
