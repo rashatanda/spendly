@@ -13,6 +13,46 @@
     {% endif %}
     {% endwith %}
 
+    <!-- Date filter -->
+    <form class="date-filter-form" method="get" action="{{ url_for('profile') }}" id="date-filter-form">
+        <div class="filter-presets">
+            <button type="button" class="filter-chip {% if not start_date and not end_date %}filter-chip--active{% endif %}"
+                    onclick="setPreset('')">All Time</button>
+            <button type="button" class="filter-chip" onclick="setPreset('this-month')">This Month</button>
+            <button type="button" class="filter-chip" onclick="setPreset('last-3')">Last 3 Months</button>
+            <button type="button" class="filter-chip" onclick="setPreset('last-6')">Last 6 Months</button>
+        </div>
+        <div class="filter-range">
+            <input type="date" id="start_date" name="start_date"
+                   class="filter-date-input" value="{{ start_date or '' }}">
+            <span class="filter-to">to</span>
+            <input type="date" id="end_date" name="end_date"
+                   class="filter-date-input" value="{{ end_date or '' }}">
+            <button type="submit" class="filter-apply">Apply</button>
+        </div>
+    </form>
+    <script>
+    function setPreset(type) {
+        var today = new Date();
+        var s = '', e = '';
+        var pad = function(n){ return String(n).padStart(2,'0'); };
+        var fmt = function(d){ return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate()); };
+        if (type === 'this-month') {
+            s = fmt(new Date(today.getFullYear(), today.getMonth(), 1));
+            e = fmt(today);
+        } else if (type === 'last-3') {
+            let d = new Date(today); d.setMonth(d.getMonth() - 3);
+            s = fmt(d); e = fmt(today);
+        } else if (type === 'last-6') {
+            let d = new Date(today); d.setMonth(d.getMonth() - 6);
+            s = fmt(d); e = fmt(today);
+        }
+        document.getElementById('start_date').value = s;
+        document.getElementById('end_date').value = e;
+        document.getElementById('date-filter-form').submit();
+    }
+    </script>
+
     <!-- Spending summary stats -->
     <div class="dashboard-stats profile-stats">
         <div class="stat-tile">
@@ -101,7 +141,7 @@
 
         <div class="profile-account-pw">
             <h2 class="panel-title">Change password</h2>
-            <form method="POST" action="/profile">
+            <form method="POST" action="{{ url_for('profile') }}">
                 <div class="form-group">
                     <label for="current_password">Current password</label>
                     <input type="password" id="current_password" name="current_password"

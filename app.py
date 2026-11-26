@@ -1,8 +1,18 @@
+import os
+import re
+
 from flask import Flask, render_template, request, redirect, url_for, session, flash
 from werkzeug.security import generate_password_hash, check_password_hash
-import os
+
 from database.db import get_db, init_db, seed_db
 from database.queries import get_user_by_id, get_summary_stats, get_recent_transactions, get_category_breakdown
+
+_DATE_RE = re.compile(r"^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$")
+
+
+def _valid_date(val):
+    return val if val and _DATE_RE.match(val) else None
+
 
 app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY", "dev-secret-change-in-prod")
@@ -164,13 +174,17 @@ def profile():
         return redirect(url_for("profile"))
 
     uid = session["user_id"]
+    start_date = _valid_date(request.args.get("start_date", ""))
+    end_date = _valid_date(request.args.get("end_date", ""))
+
     user = get_user_by_id(uid)
-    stats = get_summary_stats(uid)
-    transactions = get_recent_transactions(uid)
-    breakdown = get_category_breakdown(uid)
+    stats = get_summary_stats(uid, start_date, end_date)
+    transactions = get_recent_transactions(uid, start_date=start_date, end_date=end_date)
+    breakdown = get_category_breakdown(uid, start_date, end_date)
 
     return render_template("profile.html", user=user, stats=stats,
-                           transactions=transactions, breakdown=breakdown)
+                           transactions=transactions, breakdown=breakdown,
+                           start_date=start_date, end_date=end_date)
 
 
 @app.route("/expenses/add")

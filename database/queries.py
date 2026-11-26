@@ -2,6 +2,18 @@ from datetime import datetime
 from database.db import get_db
 
 
+def _date_where(start_date, end_date):
+    conditions = ["user_id = ?"]
+    extra_params = []
+    if start_date:
+        conditions.append("date >= ?")
+        extra_params.append(start_date)
+    if end_date:
+        conditions.append("date <= ?")
+        extra_params.append(end_date)
+    return " AND ".join(conditions), extra_params
+
+
 def get_user_by_id(user_id):
     conn = get_db()
     try:
@@ -23,18 +35,20 @@ def get_user_by_id(user_id):
     return {"name": row["name"], "email": row["email"], "member_since": member_since}
 
 
-def get_summary_stats(user_id):
+def get_summary_stats(user_id, start_date=None, end_date=None):
+    where, extra = _date_where(start_date, end_date)
+    params = [user_id] + extra
     conn = get_db()
     try:
         total_row = conn.execute(
-            "SELECT COALESCE(SUM(amount), 0) AS total, COUNT(*) AS cnt FROM expenses WHERE user_id = ?",
-            (user_id,),
+            f"SELECT COALESCE(SUM(amount), 0) AS total, COUNT(*) AS cnt FROM expenses WHERE {where}",
+            params,
         ).fetchone()
         top_row = conn.execute(
-            """SELECT category, SUM(amount) AS cat_total
-               FROM expenses WHERE user_id = ?
+            f"""SELECT category, SUM(amount) AS cat_total
+               FROM expenses WHERE {where}
                GROUP BY category ORDER BY cat_total DESC LIMIT 1""",
-            (user_id,),
+            params,
         ).fetchone()
     finally:
         conn.close()
@@ -46,14 +60,16 @@ def get_summary_stats(user_id):
     }
 
 
-def get_recent_transactions(user_id, limit=10):
+def get_recent_transactions(user_id, limit=10, start_date=None, end_date=None):
+    where, extra = _date_where(start_date, end_date)
+    params = [user_id] + extra + [limit]
     conn = get_db()
     try:
         rows = conn.execute(
-            """SELECT date, description, category, amount
-               FROM expenses WHERE user_id = ?
+            f"""SELECT date, description, category, amount
+               FROM expenses WHERE {where}
                ORDER BY date DESC, id DESC LIMIT ?""",
-            (user_id, limit),
+            params,
         ).fetchall()
     finally:
         conn.close()
@@ -61,14 +77,16 @@ def get_recent_transactions(user_id, limit=10):
     return [dict(r) for r in rows]
 
 
-def get_category_breakdown(user_id):
+def get_category_breakdown(user_id, start_date=None, end_date=None):
+    where, extra = _date_where(start_date, end_date)
+    params = [user_id] + extra
     conn = get_db()
     try:
         rows = conn.execute(
-            """SELECT category AS name, SUM(amount) AS amount
-               FROM expenses WHERE user_id = ?
+            f"""SELECT category AS name, SUM(amount) AS amount
+               FROM expenses WHERE {where}
                GROUP BY category ORDER BY amount DESC""",
-            (user_id,),
+            params,
         ).fetchall()
     finally:
         conn.close()

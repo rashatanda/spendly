@@ -844,6 +844,79 @@ a { color: inherit; text-decoration: none; }
     border-radius: var(--radius-md);
 }
 
+.date-filter-form {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem 0.75rem;
+    padding: 0.75rem 1.25rem;
+    background: var(--paper-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+}
+
+.filter-presets {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.filter-chip {
+    padding: 0.35rem 0.9rem;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    background: transparent;
+    font-family: var(--font-body);
+    font-size: 0.875rem;
+    color: var(--ink-soft);
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s;
+}
+
+.filter-chip:hover,
+.filter-chip--active {
+    background: var(--accent-light);
+    border-color: var(--accent);
+    color: var(--accent);
+}
+
+.filter-range {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-left: auto;
+}
+
+.filter-date-input {
+    padding: 0.35rem 0.6rem;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    font-family: var(--font-body);
+    font-size: 0.875rem;
+    color: var(--ink);
+    background: var(--paper-card);
+}
+
+.filter-to {
+    font-size: 0.875rem;
+    color: var(--ink-muted);
+}
+
+.filter-apply {
+    padding: 0.4rem 1.1rem;
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    border-radius: var(--radius-sm);
+    font-family: var(--font-body);
+    font-size: 0.875rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity 0.15s;
+}
+
+.filter-apply:hover { opacity: 0.88; }
+
 .profile-stats {
     margin-bottom: 0;
 }
